@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
+import { AbstractParticleGroup, SpreadParticleGroup } from './particle-group';
+
 function initObjMTL(scene: THREE.Scene) {
   function onProgress( xhr: any ) {
     if ( xhr.lengthComputable ) {
@@ -59,7 +61,9 @@ function initialize() {
   return { renderer, camera, scene, controls }
 }
 
-const { renderer, camera, scene, controls } = initialize()
+// common stuff
+const { renderer, camera, scene, controls } = initialize();
+const particleGroups: AbstractParticleGroup[] = [];
 
 const renderLoop = () => {
   renderer.render(scene, camera)
@@ -69,7 +73,7 @@ const renderLoop = () => {
 const axesHelper = new THREE.AxesHelper( 50 );
 scene.add(axesHelper)
 
-const lineMaterial = new THREE.LineBasicMaterial( { color: 0x00ffff } );
+const lineMaterial = new THREE.LineBasicMaterial( { color: 0x888888} );
 for (let i = 10; i < 200; i += 10) {
   const geometry = new THREE.BufferGeometry().setFromPoints([ 
     new THREE.Vector3(-100, 0, -i),
@@ -86,6 +90,7 @@ for (let i = 10; i < 200; i += 10) {
 // See: https://codepen.io/boytchev/pen/QWzjOMx
 
 initObjMTL(scene);
+/*
 const L = 10; // number of lines
 const N = 70; // number of vertices in a line
 
@@ -116,6 +121,7 @@ for( let i = 0; i < L; i++ ) {
   particleLines.push( line );
 }
 scene.add( ...particleLines);
+*/
 
 // function path( buf, t, i, rnd ) {
 //   // t += 10*rnd;
@@ -125,38 +131,35 @@ scene.add( ...particleLines);
 //   buf.setXYZ( i, x, y, z );
 // }
 
-
-const geometry = new THREE.SphereGeometry( 0.5, 16, 16 );
-const material = new THREE.MeshLambertMaterial( { color: 0xffff00 } );
-
-const group = new THREE.Group();
-
-const spheres: THREE.Mesh[] = [];
+/*
+const spheres: THREE.Vector3[] = [];
 const directions: THREE.Vector3[] = [];
 const targetDirections: THREE.Vector3[] = [];
 
 for (let i = 0; i < L; i++) {
-  const sphere = new THREE.Mesh( geometry, material );
+  const sphere = new THREE.Vector3(0, 0, 0);
   const direction = new THREE.Vector3(Math.random() - 0.5, 0, 1);
   const targetDirection = new THREE.Vector3((Math.random() - 0.5) * 0.5, 0, -1);
   spheres.push(sphere);
   directions.push(direction);
   targetDirections.push(targetDirection);
 }
-group.add(...spheres);
+*/
+// group.add(...spheres);
 // scene.add(group);
 
 
 let speed = 0.10;
 function update(t) {
+  /*
   for (let i = 0; i < L; i++) {
-    spheres[i].position.x += speed * directions[i].x;
-    spheres[i].position.y += speed * directions[i].y;
-    spheres[i].position.z += speed * directions[i].z;
+    spheres[i].x += speed * directions[i].x;
+    spheres[i].y += speed * directions[i].y;
+    spheres[i].z += speed * directions[i].z;
     const test = targetDirections[i].clone().sub(directions[i]);
     directions[i].addScaledVector(test, 0.03);
 
-    particlePositionBuffers[i].unshift(spheres[i].position.clone());
+    particlePositionBuffers[i].unshift(spheres[i].clone());
     if (particlePositionBuffers[i].length > N) {
       particlePositionBuffers[i] = particlePositionBuffers[i].slice(0, N);
     }
@@ -170,6 +173,7 @@ function update(t) {
     }
     pos.needsUpdate = true;
   }
+  */
 
   /*
   for (let i = 0; i < L; i++) {
@@ -182,12 +186,28 @@ function update(t) {
   */
 
   speed += 0.001
+
+  particleGroups.forEach(group => {
+    group.update(scene)
+  });
 }
 
 // Attach to DOM
-controls.addEventListener( 'change', renderLoop );
+function keyHandler(event: KeyboardEvent) {
+  const keyCode = event.which;
+  if (keyCode === 32) { // space
+    console.log('space pressed');
+    const newParticlegroup = new SpreadParticleGroup();
+    newParticlegroup.init();
+    particleGroups.push(newParticlegroup);
+    // register
+    scene.add(newParticlegroup.getGroup());
+  }
+}
 
+controls.addEventListener( 'change', renderLoop );
 document.body.appendChild( renderer.domElement );
+document.addEventListener('keydown', keyHandler, false);
 
 function animate(t) {
   update(t);
