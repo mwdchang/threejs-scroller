@@ -4,11 +4,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
-import { 
-  AbstractParticleGroup,
-  SpreadParticleGroup,
-  NovaGroup
-} from './particle-group';
+import { AbstractParticleGroup, } from './particle-group';
+import { SpreadParticleGroup } from './spread';
+import { Spread2 } from './spread2';
+import { NovaGroup } from './nova';
 
 function initObjMTL(scene: THREE.Scene) {
   function onProgress( xhr: any ) {
@@ -20,17 +19,18 @@ function initObjMTL(scene: THREE.Scene) {
   function onError() {}
 
   new MTLLoader()
-    .setPath('models/shuttle/')
-    .load('shuttle.mtl', function (materials) {
+    .setPath('models/battle-crusier/')
+    .load('Envos_Battlecruiser.mtl', function (materials) {
       materials.preload();
       console.log('hihi', materials);
 
       new OBJLoader() 
         .setMaterials(materials)
-        .setPath('models/shuttle/')
-        .load('shuttle.obj', function (object) { 
-          object.scale.setScalar(0.02);
-          object.rotateY(-90 * Math.PI / 180);
+        .setPath('models/battle-crusier/')
+        .load('Envos Battlecruiser.obj', function (object) { 
+          object.scale.setScalar(0.0075);
+          object.rotateY(-180 * Math.PI / 180);
+          object.translateY(-0.5);
           scene.add(object);
         }, onProgress, onError);
     });
@@ -67,18 +67,18 @@ function initialize() {
 
 // common stuff
 const { renderer, camera, scene, controls } = initialize();
-const particleGroups: AbstractParticleGroup[] = [];
+let particleGroups: AbstractParticleGroup[] = [];
 
 const renderLoop = () => {
   renderer.render(scene, camera)
 }
 
 // Debug
-const axesHelper = new THREE.AxesHelper( 50 );
-scene.add(axesHelper)
+// const axesHelper = new THREE.AxesHelper( 50 );
+// scene.add(axesHelper)
 
 const lineMaterial = new THREE.LineBasicMaterial( { color: 0x888888} );
-for (let i = -200; i < 200; i += 10) {
+for (let i = -100; i < 100; i += 5) {
   const geometry = new THREE.BufferGeometry().setFromPoints([ 
     new THREE.Vector3(-100, 0, -i),
     new THREE.Vector3(100, 0, -i)
@@ -114,9 +114,22 @@ function update(t) {
   }
   */
 
+  particleGroups = particleGroups.filter(d => d.done === false);
+
   particleGroups.forEach(group => {
-    group.update(scene)
+    if (group.done === false) {
+      group.update(scene);
+    }
   });
+
+
+  particleGroups.forEach(group => {
+    if (group.done === true) {
+      scene.remove(group.getGroup());
+      group.dispose();
+    }
+  });
+
 }
 
 // Attach to DOM
@@ -135,7 +148,7 @@ function keyHandler(event: KeyboardEvent) {
   */
   if (keyCode === 49) { // num-1
     console.log('space pressed');
-    const newParticlegroup = new SpreadParticleGroup();
+    const newParticlegroup = new Spread2();
     newParticlegroup.init();
     particleGroups.push(newParticlegroup);
     // register
@@ -149,6 +162,15 @@ function keyHandler(event: KeyboardEvent) {
     particleGroups.push(newParticlegroup);
     scene.add(newParticlegroup.getGroup());
   }
+
+  if (keyCode === 51) { // num-2
+    console.log('space pressed');
+    const newParticlegroup = new SpreadParticleGroup();
+    newParticlegroup.init();
+    particleGroups.push(newParticlegroup);
+    scene.add(newParticlegroup.getGroup());
+  }
+
 }
 
 controls.addEventListener( 'change', renderLoop );
