@@ -18,9 +18,9 @@ export class NovaGroup extends AbstractParticleGroup {
 
   init() {
     const colors = [];
-    const color = new THREE.Color();
     for( var i = 0; i < this.SEGMENTS + 1; i++ ) {
-      color.setRGB(0.8, 0.7, 0.3);
+      const color = new THREE.Color();
+      color.setRGB(0.2, 0.7, 0.8);
       colors.push( color.r, color.g, color.b );
     }
     const particleLineMaterial = new THREE.LineBasicMaterial( {
@@ -57,6 +57,8 @@ export class NovaGroup extends AbstractParticleGroup {
       pos.needsUpdate = true;
     }
     this.cnt ++;
+    this.group.rotateX((this.cnt * 0.5) * Math.PI / 180);
+    this.group.rotateY((this.cnt * 0.5) * Math.PI / 180);
     if (this.cnt > 100) {
       console.log('nova done');
       this.done = true;

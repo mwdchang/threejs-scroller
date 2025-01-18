@@ -19,22 +19,22 @@ function initObjMTL(scene: THREE.Scene) {
   function onError() {}
 
   new MTLLoader()
-    .setPath('models/battle-crusier/')
-    .load('Envos_Battlecruiser.mtl', function (materials) {
+    .setPath('models/ship-pack/')
+    .load('ship4.mtl', function (materials) {
       materials.preload();
-      console.log('hihi', materials);
 
       new OBJLoader() 
         .setMaterials(materials)
-        .setPath('models/battle-crusier/')
-        .load('Envos Battlecruiser.obj', function (object) { 
-          object.scale.setScalar(0.0075);
-          object.rotateY(-180 * Math.PI / 180);
-          object.translateY(-0.5);
+        .setPath('models/ship-pack/')
+        .load('ship4.obj', function (object) { 
+          object.scale.setScalar(0.75);
+          // object.rotateY(-180 * Math.PI / 180);
+          // object.translateY(-0.5);
           scene.add(object);
         }, onProgress, onError);
     });
 }
+
 
 function initialize() {
   const renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -78,10 +78,19 @@ const renderLoop = () => {
 // scene.add(axesHelper)
 
 const lineMaterial = new THREE.LineBasicMaterial( { color: 0x888888} );
-for (let i = -100; i < 100; i += 5) {
+const bound = 40
+for (let i = -bound; i < bound; i += 2) {
   const geometry = new THREE.BufferGeometry().setFromPoints([ 
-    new THREE.Vector3(-100, 0, -i),
-    new THREE.Vector3(100, 0, -i)
+    new THREE.Vector3(-bound, 0, i),
+    new THREE.Vector3(bound, 0, i)
+  ]);
+  const line = new THREE.Line( geometry, lineMaterial );
+  scene.add( line );
+}
+for (let i = -bound; i < bound; i += 2) {
+  const geometry = new THREE.BufferGeometry().setFromPoints([ 
+    new THREE.Vector3(i, 0, -bound),
+    new THREE.Vector3(i, 0, bound)
   ]);
   const line = new THREE.Line( geometry, lineMaterial );
   scene.add( line );
@@ -122,14 +131,12 @@ function update(t) {
     }
   });
 
-
   particleGroups.forEach(group => {
     if (group.done === true) {
       scene.remove(group.getGroup());
       group.dispose();
     }
   });
-
 }
 
 // Attach to DOM
@@ -176,6 +183,21 @@ function keyHandler(event: KeyboardEvent) {
 controls.addEventListener( 'change', renderLoop );
 document.body.appendChild( renderer.domElement );
 document.addEventListener('keydown', keyHandler, false);
+
+// Just a simple text box for now
+const divElement = document.createElement('div');
+divElement.style.position = 'fixed'
+divElement.style.left = '20px'
+divElement.style.top = '20px'
+divElement.style.width = '400px';
+divElement.style.height = '70px';
+divElement.style.background = '#222222';
+divElement.style.opacity = '0.70';
+divElement.style.color = '#EEEEEE';
+divElement.style.padding = '5px';
+divElement.innerHTML = 'Use mouse to zoom/rotate camera. Press 1, 2, or 3 to see effect';
+document.body.appendChild(divElement)
+
 
 function animate(t) {
   update(t);
