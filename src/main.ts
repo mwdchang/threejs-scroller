@@ -9,7 +9,21 @@ import { SpreadParticleGroup } from './spread';
 import { Spread2 } from './spread2';
 import { NovaGroup } from './nova';
 
-function initObjMTL(scene: THREE.Scene) {
+let ship: THREE.Group;
+
+interface LoadModelOptions {
+  scale?: number;
+  translation?: THREE.Vector3;
+  rotation?: THREE.Vector3;
+}
+
+function initObjMTL(
+  scene: THREE.Scene,
+  pathName: string,
+  modelName: string, 
+  materialName: string,
+  options?:LoadModelOptions 
+) {
   function onProgress( xhr: any ) {
     if ( xhr.lengthComputable ) {
       const percentComplete = xhr.loaded / xhr.total * 100;
@@ -19,15 +33,34 @@ function initObjMTL(scene: THREE.Scene) {
   function onError() {}
 
   new MTLLoader()
-    .setPath('models/ship-pack/')
-    .load('ship4.mtl', function (materials) {
+    .setPath(pathName)
+    .load(materialName, function (materials) {
       materials.preload();
 
       new OBJLoader() 
         .setMaterials(materials)
-        .setPath('models/ship-pack/')
-        .load('ship4.obj', function (object) { 
-          object.scale.setScalar(0.75);
+        .setPath(pathName)
+        .load(modelName, function (object) { 
+          if (options) {
+            if (options.scale) {
+              object.scale.setScalar(options.scale);
+            }
+            if (options.translation) {
+              object.translateX(options.translation.x);
+              object.translateY(options.translation.y);
+              object.translateZ(options.translation.z);
+            }
+            if (options.rotation) {
+              object.rotateX(options.rotation.x);
+              object.rotateY(options.rotation.y);
+              object.rotateZ(options.rotation.z);
+            }
+          }
+
+          // Debugging bounding box
+          const box = new THREE.BoxHelper( object, 0xffff00 );
+          scene.add(box)
+
           // object.rotateY(-180 * Math.PI / 180);
           // object.translateY(-0.5);
           scene.add(object);
@@ -96,13 +129,16 @@ for (let i = -bound; i < bound; i += 2) {
   scene.add( line );
 }
 
+
 // Testing
 // TODO: 
 // See: maybe https://github.com/mkkellogg/TrailRendererJS?tab=readme-ov-file
 // See: https://discourse.threejs.org/t/how-would-you-implement-bullet-trails/67644/2
 // See: https://codepen.io/boytchev/pen/QWzjOMx
 
-initObjMTL(scene);
+initObjMTL(scene, 'models/ship-pack/', 'ship4.obj', 'ship4.mtl', {
+  scale: 0.75
+});
 
 // function path( buf, t, i, rnd ) {
 //   // t += 10*rnd;
